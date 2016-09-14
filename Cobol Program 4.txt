@@ -1,0 +1,139 @@
+
+This is a program I talked about with one of my NYUpoly friends and was inspired by a program I found online.
+This program was inspired from that program, it essentially is used for setting up data on people for
+their names (first and last), their ID, their city, and their state. Very useful. A program like this would
+take a while to code in C++.
+
+
+
+
+ ENVIRONMENT DIVISION.
+      INPUT-OUTPUT SECTION.
+      FILE-CONTROL.
+         
+      DATA DIVISION.
+      FILE SECTION.
+      FD IN-FILE
+         DATA RECORD IS IN-RECORD.
+      01 IN-RECORD.
+         02 IN-ID                  PIC 9(5).
+         02 IN-LAST-NAME           PIC X(15).
+         02 IN-FIRST-NAME          PIC X(10).
+         02 IN-CITY                PIC X(12).
+         02 IN-STATE               PIC X(2).
+            88 VALID-STATE-CODE                      VALUES 'AK'
+               'AL' 'AR' 'AZ' 'CA' 'CO' 'CT' 'DC' 'DE' 'FL' 'GA'
+               'HI' 'IA' 'ID' 'IL' 'IN' 'KS' 'KY' 'LA' 'MA' 'MD'
+               'ME' 'MI' 'MN' 'MO' 'MS' 'MT' 'NC' 'ND' 'NE' 'NH'
+               'NJ' 'NM' 'NV' 'NY' 'OH' 'OK' 'OR' 'PA' 'RI' 'SC'
+               'SD' 'TN' 'TX' 'UT' 'VA' 'VT' 'WA' 'WI' 'WV' 'WY'.
+
+      FD OUT-FILE
+         DATA RECORD IS OUT-RECORD.
+      01 OUT-RECORD                PIC X(80).
+
+      SD SORT-FILE
+         DATA RECORD IS SORT-RECORD.
+      01 SORT-RECORD.
+         02 SORT-ID                PIC 9(5).
+         02 SORT-LAST-NAME         PIC X(15).
+         02 SORT-FIRST-NAME        PIC X(10).
+         02 SORT-CITY              PIC X(12).
+         02 SORT-STATE             PIC X(2).
+
+      WORKING-STORAGE SECTION.
+
+      01 DETAIL-LINE.
+         02 DETAIL-ID              PIC 9(5).
+         02                        PIC X(3)          VALUE SPACES.
+         02 DETAIL-LAST-NAME       PIC X(15).
+         02                        PIC X(3)          VALUE SPACES.
+         02 DETAIL-FIRST-NAME      PIC X(10).
+         02                        PIC X(3)          VALUE SPACES.
+         02 DETAIL-CITY            PIC X(12).
+         02                        PIC X(3)          VALUE SPACES.
+         02 DETAIL-STATE           PIC X(2).
+
+      01 SORTED-DATA-SWITCH        PIC X             VALUE 'N'.
+         88 NO-MORE-SORTED-DATA                      VALUE 'Y'.
+
+      01 EOF-SWITCH                PIC X             VALUE 'N'.
+         88 NO-MORE-INPUT-RECORDS                    VALUE 'Y'.
+
+      PROCEDURE DIVISION.
+      MAIN-LOGIC.
+          SORT SORT-FILE
+               ON ASCENDING KEY SORT-LAST-NAME
+               INPUT PROCEDURE IS INPUT-LOGIC
+               OUTPUT PROCEDURE IS CREATE-REPORT.
+          STOP RUN.
+
+      INPUT-LOGIC.
+          OPEN INPUT IN-FILE.
+          READ IN-FILE
+             AT END MOVE 'Y' TO EOF-SWITCH.
+          PERFORM DATA-LOOP
+             UNTIL NO-MORE-INPUT-RECORDS.
+          CLOSE IN-FILE.
+
+      DATA-LOOP.
+          IF VALID-STATE-CODE
+             MOVE IN-RECORD TO SORT-RECORD
+             RELEASE SORT-RECORD.
+          READ IN-FILE
+             AT END MOVE 'Y' TO EOF-SWITCH.
+
+      CREATE-REPORT.
+          OPEN OUTPUT OUT-FILE.
+          RETURN SORT-FILE
+             AT END MOVE 'Y' TO SORTED-DATA-SWITCH.
+          PERFORM REPORT-LOOP
+             UNTIL NO-MORE-SORTED-DATA.
+          CLOSE OUT-FILE.
+
+      REPORT-LOOP.
+          MOVE SORT-ID TO DETAIL-ID
+          MOVE SORT-LAST-NAME TO DETAIL-LAST-NAME.
+          MOVE SORT-FIRST-NAME TO DETAIL-FIRST-NAME.
+          MOVE SORT-CITY TO DETAIL-CITY.
+          MOVE SORT-STATE TO DETAIL-STATE.
+          WRITE OUT-RECORD FROM DETAIL-LINE.
+          RETURN SORT-FILE
+             AT END MOVE 'Y' TO SORTED-DATA-SWITCH.
+
+
+
+
+Input
+
+91163Dube           Jason     Chicago     IL
+61535King           Adriane   Cincinnati  OH
+45636Holtz          Rachel    Newport     KY
+10216Gehl           Bryan     Louisville  KY
+52158Flynn          Ashley    Muskegon    MI
+22277Theis          Hanah     Norwood     OH
+38551Solpa          Mac       Lansing     MI
+78496McCoy          Amanda    Brookfield  WI
+65720Read           Sean      Springfield BF
+94000Waymel         Bradley   Kalamazoo   MI
+42966Vilella        Reza      Urbana      IL
+04928Streeter       Farhad    Toledo      OH
+69216Steele         Karen     Covington   KY
+56913Moreno         Jan       Dayton      OH
+34932Vogel          Sandra    Grand RapidsMI
+Output (report sorted by name)
+
+91163   Dube              Jason        Chicago        IL
+52158   Flynn             Ashley       Muskegon       MI
+10216   Gehl              Bryan        Louisville     KY
+45636   Holtz             Rachel       Newport        KY
+61535   King              Adriane      Cincinnati     OH
+78496   McCoy             Amanda       Brookfield     WI
+56913   Moreno            Jan          Dayton         OH
+38551   Solpa             Mac          Lansing        MI
+69216   Steele            Karen        Covington      KY
+04928   Streeter          Farhad       Toledo         OH
+22277   Theis             Hanah        Norwood        OH
+42966   Vilella           Reza         Urbana         IL
+34932   Vogel             Sandra       Grand Rapids   MI
+94000   Waymel            Bradley      Kalamazoo      MI
